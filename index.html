@@ -1,9 +1,10 @@
+```html
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>전국 영화 특별관 찾기</title>
+    <title>전국 IMAX관 찾기</title>
 
     <style>
         /* 기본 스타일 초기화 */
@@ -17,9 +18,10 @@
             width: 100%;
             height: 100%;
             font-family: "Malgun Gothic", sans-serif;
+            overflow: hidden;
         }
 
-        /* 전체 화면 2분할 */
+        /* 전체 레이아웃 */
         .container {
             display: flex;
             width: 100%;
@@ -28,16 +30,17 @@
 
         /* 왼쪽 사이드바 */
         #sidebar {
-            width: 360px;
+            width: 380px;
+            min-width: 380px;
             height: 100%;
             background-color: #f8f9fa;
             border-right: 1px solid #ddd;
-            padding: 20px;
             overflow-y: auto;
+            padding: 20px;
             z-index: 10;
         }
 
-        /* 오른쪽 지도 */
+        /* 지도 영역 */
         #map {
             flex: 1;
             height: 100%;
@@ -45,89 +48,135 @@
 
         /* 제목 */
         .title {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
-            margin-bottom: 15px;
+            margin-bottom: 18px;
         }
 
-        /* 검색창 */
+        /* 검색 영역 */
         .search-box {
             display: flex;
             gap: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 18px;
         }
 
         .search-box input {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             border: 1px solid #ccc;
-            border-radius: 6px;
+            border-radius: 8px;
+            font-size: 14px;
         }
 
         .search-box button {
-            padding: 10px 14px;
+            padding: 12px 16px;
             border: none;
-            background-color: #fee500;
-            border-radius: 6px;
+            border-radius: 8px;
+            background-color: #111;
+            color: white;
             cursor: pointer;
             font-weight: bold;
         }
 
-        /* 탭 영역 */
+        .search-box button:hover {
+            background-color: #333;
+        }
+
+        /* 탭 */
         .tab-container {
+            display: flex;
             margin-bottom: 20px;
         }
 
         .tab-button {
-            width: 100%;
+            flex: 1;
             padding: 12px;
             border: none;
-            border-radius: 8px;
-            background-color: #222;
+            border-radius: 10px;
+            background-color: #111;
             color: white;
             cursor: pointer;
-            font-size: 15px;
             font-weight: bold;
+            font-size: 15px;
         }
 
         .tab-button:hover {
-            background-color: #444;
+            background-color: #333;
         }
 
-        /* 결과 리스트 */
+        /* 결과 개수 */
+        .result-count {
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        /* 리스트 */
         #places-list {
             list-style: none;
         }
 
         #places-list li {
-            padding: 15px 10px;
-            border-bottom: 1px solid #eee;
+            padding: 16px;
+            margin-bottom: 10px;
+            background-color: white;
+            border-radius: 12px;
+            border: 1px solid #eee;
             cursor: pointer;
             transition: 0.2s;
         }
 
         #places-list li:hover {
-            background-color: #f0f0f0;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
         }
 
-        #places-list h5 {
-            margin-bottom: 5px;
+        .place-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
             color: #222;
         }
 
-        #places-list p {
+        .place-address {
             font-size: 13px;
             color: #666;
+            margin-bottom: 10px;
         }
 
-        .category-label {
+        .place-distance {
+            font-size: 13px;
+            color: #111;
+            font-weight: bold;
+        }
+
+        .badge {
             display: inline-block;
-            margin-top: 6px;
-            padding: 3px 8px;
-            border-radius: 12px;
+            margin-top: 10px;
+            padding: 4px 10px;
             background-color: #111;
             color: white;
+            border-radius: 20px;
             font-size: 12px;
+        }
+
+        /* 모바일 반응형 */
+        @media (max-width: 768px) {
+
+            .container {
+                flex-direction: column;
+            }
+
+            #sidebar {
+                width: 100%;
+                min-width: 100%;
+                height: 45%;
+            }
+
+            #map {
+                width: 100%;
+                height: 55%;
+            }
         }
     </style>
 </head>
@@ -136,85 +185,142 @@
 
 <div class="container">
 
-    <!-- 왼쪽 영역 -->
+    <!-- 왼쪽 사이드바 -->
     <div id="sidebar">
 
-        <div class="title">🎬 영화 특별관 찾기</div>
+        <div class="title">🎬 전국 IMAX관 찾기</div>
 
         <!-- 검색창 -->
         <div class="search-box">
             <input
                 type="text"
                 id="keyword"
-                placeholder="지역 또는 영화관 입력"
-                onkeypress="if(event.keyCode === 13) searchPlaces()"
+                placeholder="지역 또는 영화관 검색"
+                onkeypress="if(event.keyCode===13) searchTheaters()"
             >
-            <button onclick="searchPlaces()">검색</button>
+
+            <button onclick="searchTheaters()">검색</button>
         </div>
 
         <!-- 탭 -->
         <div class="tab-container">
-            <button class="tab-button" onclick="searchIMAX()">
-                IMAX 특별관 보기
+            <button class="tab-button" onclick="loadIMAXTheaters()">
+                IMAX
             </button>
         </div>
 
-        <!-- 결과 리스트 -->
+        <!-- 결과 개수 -->
+        <div class="result-count" id="result-count">
+            IMAX 영화관 정보를 불러오는 중...
+        </div>
+
+        <!-- 리스트 -->
         <ul id="places-list"></ul>
 
     </div>
 
-    <!-- 오른쪽 지도 -->
+    <!-- 지도 -->
     <div id="map"></div>
 
 </div>
 
 <!-- 카카오맵 SDK -->
+<!-- 실제 배포 시 appkey 교체 및 허용 도메인 설정 필수 -->
 <script
     type="text/javascript"
-    src="//dapi.kakao.com/v2/maps/sdk.js?appkey=70a1bb5c7d8e1e60565bfc6a59b8266f&autoload=false&libraries=services"
+    src="//dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_APP_KEY&autoload=false"
 ></script>
 
 <script>
 
     let map;
-    let placeService;
 
-    let currentPosition = null;
+    // 현재 위치
+    let currentLatitude = 37.566826;
+    let currentLongitude = 126.9786567;
 
-    let markerList = [];
+    // 현재 위치 마커
+    let currentMarker = null;
 
-    // IMAX 마커 이미지
-    const imaxMarkerImage = new kakao.maps.MarkerImage(
-        "IMAX.logo.png",
-        new kakao.maps.Size(45, 45),
+    // 영화관 마커 배열
+    let theaterMarkers = [];
+
+    // 인포윈도우 배열
+    let infoWindows = [];
+
+    // IMAX 전용 DB
+    // 직접 관리하는 방식이 정확도 높음
+    const imaxTheaters = [
+
         {
-            offset: new kakao.maps.Point(22, 45)
+            name: "CGV 용산아이파크몰 IMAX",
+            address: "서울 용산구 한강대로23길 55",
+            latitude: 37.529853,
+            longitude: 126.965226,
+            brand: "CGV",
+            laser: true
+        },
+
+        {
+            name: "CGV 왕십리 IMAX",
+            address: "서울 성동구 왕십리광장로 17",
+            latitude: 37.561018,
+            longitude: 127.038219,
+            brand: "CGV",
+            laser: true
+        },
+
+        {
+            name: "CGV 천호 IMAX",
+            address: "서울 강동구 양재대로 1571",
+            latitude: 37.540045,
+            longitude: 127.124449,
+            brand: "CGV",
+            laser: false
+        },
+
+        {
+            name: "CGV 울산삼산 IMAX",
+            address: "울산 남구 화합로 185",
+            latitude: 35.538377,
+            longitude: 129.338532,
+            brand: "CGV",
+            laser: true
+        },
+
+        {
+            name: "CGV 서면 IMAX",
+            address: "부산 부산진구 동천로 4",
+            latitude: 35.156169,
+            longitude: 129.059525,
+            brand: "CGV",
+            laser: true
+        },
+
+        {
+            name: "CGV 광교 IMAX",
+            address: "경기 수원시 영통구 광교중앙로 124",
+            latitude: 37.285017,
+            longitude: 127.057821,
+            brand: "CGV",
+            laser: true
         }
-    );
+    ];
 
-    // 현재 위치 마커 이미지
-    const currentMarkerImage = new kakao.maps.MarkerImage(
-        "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
-        new kakao.maps.Size(24, 35)
-    );
-
-    // 카카오맵 SDK 로드 완료 후 실행
+    // 카카오맵 SDK 완전 로드 후 실행
     kakao.maps.load(function () {
 
-        // 현재 위치 가져오기
+        // 위치 권한 요청
         if (navigator.geolocation) {
 
             navigator.geolocation.getCurrentPosition(
 
                 function (position) {
 
-                    const latitude = position.coords.latitude;
-                    const longitude = position.coords.longitude;
+                    currentLatitude = position.coords.latitude;
+                    currentLongitude = position.coords.longitude;
 
-                    currentPosition = new kakao.maps.LatLng(latitude, longitude);
-
-                    initializeMap(latitude, longitude);
+                    initializeMap();
 
                 },
 
@@ -222,189 +328,303 @@
 
                     console.error("위치 정보를 가져올 수 없습니다.", error);
 
-                    // 기본 위치 (서울 시청)
-                    initializeMap(37.566826, 126.9786567);
+                    // 기본 좌표 사용
+                    initializeMap();
                 }
-
             );
 
         } else {
 
-            // 브라우저가 Geolocation 미지원 시
-            initializeMap(37.566826, 126.9786567);
-
+            initializeMap();
         }
-
     });
 
-    // 지도 초기화 함수
-    function initializeMap(latitude, longitude) {
+    // 지도 초기화
+    function initializeMap() {
 
         const mapContainer = document.getElementById("map");
 
         const mapOption = {
-            center: new kakao.maps.LatLng(latitude, longitude),
+            center: new kakao.maps.LatLng(currentLatitude, currentLongitude),
             level: 5
         };
 
         // 지도 생성
         map = new kakao.maps.Map(mapContainer, mapOption);
 
-        // 장소 검색 객체 생성
-        placeService = new kakao.maps.services.Places();
+        // 현재 위치 표시
+        displayCurrentLocation();
 
-        // 현재 위치 마커 표시
-        displayCurrentLocation(latitude, longitude);
+        // IMAX 자동 로드
+        loadIMAXTheaters();
     }
 
-    // 현재 위치 표시 함수
-    function displayCurrentLocation(latitude, longitude) {
+    // 현재 위치 표시
+    function displayCurrentLocation() {
 
-        const currentLocation = new kakao.maps.LatLng(latitude, longitude);
+        const currentPosition = new kakao.maps.LatLng(
+            currentLatitude,
+            currentLongitude
+        );
 
-        const currentMarker = new kakao.maps.Marker({
+        const currentMarkerImage = new kakao.maps.MarkerImage(
+            "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
+            new kakao.maps.Size(24, 35)
+        );
+
+        currentMarker = new kakao.maps.Marker({
             map: map,
-            position: currentLocation,
+            position: currentPosition,
             image: currentMarkerImage
         });
 
-        const infoWindow = new kakao.maps.InfoWindow({
+        const currentInfoWindow = new kakao.maps.InfoWindow({
             content: `
-                <div style="
-                    padding:8px;
-                    font-size:13px;
-                    text-align:center;
-                ">
+                <div style="padding:8px; font-size:13px; text-align:center; width:120px;">
                     📍 현재 위치
                 </div>
             `
         });
 
-        infoWindow.open(map, currentMarker);
+        currentInfoWindow.open(map, currentMarker);
     }
 
-    // 일반 검색 함수
-    function searchPlaces() {
+    // IMAX 목록 로드
+    function loadIMAXTheaters() {
 
-        const keyword = document.getElementById("keyword").value.trim();
+        clearTheaterMarkers();
+
+        const sortedTheaters = [...imaxTheaters].sort(function (a, b) {
+
+            const distanceA = calculateDistance(
+                currentLatitude,
+                currentLongitude,
+                a.latitude,
+                a.longitude
+            );
+
+            const distanceB = calculateDistance(
+                currentLatitude,
+                currentLongitude,
+                b.latitude,
+                b.longitude
+            );
+
+            return distanceA - distanceB;
+        });
+
+        displayTheaters(sortedTheaters);
+    }
+
+    // 검색 함수
+    function searchTheaters() {
+
+        const keyword = document.getElementById("keyword").value.trim().toLowerCase();
 
         if (!keyword) {
-            alert("검색어를 입력해주세요!");
+            loadIMAXTheaters();
             return;
         }
 
-        // 기존 마커 제거
-        removeMarkers();
+        const filteredTheaters = imaxTheaters.filter(function (theater) {
 
-        // 키워드 검색
-        placeService.keywordSearch(keyword, placesSearchCallback);
+            return (
+                theater.name.toLowerCase().includes(keyword) ||
+                theater.address.toLowerCase().includes(keyword)
+            );
+        });
+
+        clearTheaterMarkers();
+
+        displayTheaters(filteredTheaters);
     }
 
-    // IMAX 탭 검색 함수
-    function searchIMAX() {
-
-        // 기존 마커 제거
-        removeMarkers();
-
-        // 리스트 초기화
-        document.getElementById("places-list").innerHTML = "";
-
-        // 현재 지도 중심 기준 검색
-        const center = map.getCenter();
-
-        // CT1 + IMAX 검색
-        placeService.keywordSearch(
-            "IMAX 영화관",
-            placesSearchCallback,
-            {
-                location: center
-            }
-        );
-    }
-
-    // 검색 결과 콜백 함수
-    function placesSearchCallback(data, status) {
-
-        if (status === kakao.maps.services.Status.OK) {
-
-            displayPlaces(data);
-
-        } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
-
-            alert("검색 결과가 없습니다.");
-
-        } else if (status === kakao.maps.services.Status.ERROR) {
-
-            alert("검색 중 오류가 발생했습니다.");
-
-        }
-    }
-
-    // 검색 결과 표시 함수
-    function displayPlaces(places) {
+    // 영화관 표시 함수
+    function displayTheaters(theaters) {
 
         const listElement = document.getElementById("places-list");
+        const resultCount = document.getElementById("result-count");
 
         listElement.innerHTML = "";
 
+        resultCount.innerHTML = `총 ${theaters.length}개의 IMAX 영화관`;
+
         const bounds = new kakao.maps.LatLngBounds();
 
-        for (let i = 0; i < places.length; i++) {
+        theaters.forEach(function (theater) {
 
-            const place = places[i];
+            const position = new kakao.maps.LatLng(
+                theater.latitude,
+                theater.longitude
+            );
 
-            const position = new kakao.maps.LatLng(place.y, place.x);
+            // IMAX 마커 이미지
+            const markerImage = new kakao.maps.MarkerImage(
+                "IMAX.logo.png",
+                new kakao.maps.Size(48, 48),
+                {
+                    offset: new kakao.maps.Point(24, 48)
+                }
+            );
 
-            // IMAX 마커 생성
+            // 마커 생성
             const marker = new kakao.maps.Marker({
                 map: map,
                 position: position,
-                title: place.place_name,
-                image: imaxMarkerImage
+                title: theater.name,
+                image: markerImage
             });
 
-            markerList.push(marker);
+            theaterMarkers.push(marker);
 
-            bounds.extend(position);
+            // 거리 계산
+            const distance = calculateDistance(
+                currentLatitude,
+                currentLongitude,
+                theater.latitude,
+                theater.longitude
+            );
+
+            // 인포윈도우
+            const infoWindow = new kakao.maps.InfoWindow({
+                content: `
+                    <div style="padding:12px; width:240px; font-size:13px; line-height:1.6;">
+
+                        <div style="font-size:15px; font-weight:bold; margin-bottom:6px;">
+                            ${theater.name}
+                        </div>
+
+                        <div>
+                            📍 ${theater.address}
+                        </div>
+
+                        <div>
+                            🎞 브랜드 : ${theater.brand}
+                        </div>
+
+                        <div>
+                            ✨ 레이저 IMAX : ${theater.laser ? "지원" : "미지원"}
+                        </div>
+
+                        <div>
+                            📏 거리 : ${distance.toFixed(1)} km
+                        </div>
+
+                    </div>
+                `
+            });
+
+            infoWindows.push(infoWindow);
+
+            // 마커 클릭 이벤트
+            kakao.maps.event.addListener(marker, "click", function () {
+
+                closeAllInfoWindows();
+
+                infoWindow.open(map, marker);
+
+                map.panTo(position);
+            });
 
             // 리스트 아이템 생성
             const item = document.createElement("li");
 
             item.innerHTML = `
-                <h5>${place.place_name}</h5>
-                <p>${place.address_name}</p>
-                <span class="category-label">IMAX</span>
+
+                <div class="place-name">
+                    ${theater.name}
+                </div>
+
+                <div class="place-address">
+                    ${theater.address}
+                </div>
+
+                <div class="place-distance">
+                    📏 현재 위치 기준 ${distance.toFixed(1)} km
+                </div>
+
+                <div class="badge">
+                    ${theater.laser ? "Laser IMAX" : "IMAX"}
+                </div>
             `;
 
-            // 리스트 클릭 시 지도 이동
+            // 리스트 클릭 이벤트
             item.onclick = function () {
+
+                closeAllInfoWindows();
+
+                infoWindow.open(map, marker);
 
                 map.panTo(position);
 
                 map.setLevel(3);
-
             };
 
             listElement.appendChild(item);
-        }
 
-        // 지도 범위 재설정
-        map.setBounds(bounds);
+            bounds.extend(position);
+        });
+
+        // 지도 범위 자동 조절
+        if (theaters.length > 0) {
+            map.setBounds(bounds);
+        }
     }
 
-    // 마커 제거 함수
-    function removeMarkers() {
+    // 모든 인포윈도우 닫기
+    function closeAllInfoWindows() {
 
-        for (let i = 0; i < markerList.length; i++) {
+        infoWindows.forEach(function (infoWindow) {
+            infoWindow.close();
+        });
+    }
 
-            markerList[i].setMap(null);
+    // 기존 영화관 마커 제거
+    function clearTheaterMarkers() {
 
-        }
+        theaterMarkers.forEach(function (marker) {
+            marker.setMap(null);
+        });
 
-        markerList = [];
+        theaterMarkers = [];
+
+        closeAllInfoWindows();
+
+        infoWindows = [];
+    }
+
+    // 거리 계산 함수
+    // Haversine 공식 사용
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+
+        const earthRadius = 6371;
+
+        const latitudeDifference = degreesToRadians(lat2 - lat1);
+        const longitudeDifference = degreesToRadians(lon2 - lon1);
+
+        const calculation =
+            Math.sin(latitudeDifference / 2) *
+            Math.sin(latitudeDifference / 2) +
+
+            Math.cos(degreesToRadians(lat1)) *
+            Math.cos(degreesToRadians(lat2)) *
+
+            Math.sin(longitudeDifference / 2) *
+            Math.sin(longitudeDifference / 2);
+
+        const finalValue =
+            2 * Math.atan2(Math.sqrt(calculation), Math.sqrt(1 - calculation));
+
+        return earthRadius * finalValue;
+    }
+
+    // 라디안 변환 함수
+    function degreesToRadians(degree) {
+        return degree * (Math.PI / 180);
     }
 
 </script>
 
 </body>
 </html>
+```
